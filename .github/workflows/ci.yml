@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-rust:
+    name: Rust Solver Tests (biotransport-rs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            02_continuum_transport/biotransport-rs/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+
+      - name: Build Rust crate
+        run: |
+          cd 02_continuum_transport/biotransport-rs
+          cargo build --verbose
+
+      - name: Run Rust unit and integration tests
+        run: |
+          cd 02_continuum_transport/biotransport-rs
+          cargo test --verbose
+
+  test-python:
+    name: Python Continuum Bridge Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run Python test suite
+        run: |
+          pytest 01_microscale_md/tests 02_continuum_transport/python/tests -v --cov=biotransport
+
+      - name: Test CLI execution and figure generation
+        run: |
+          python 02_continuum_transport/python/biotransport/cli.py --params data/sample_md_params.json --plot data/ci_test_plot.png

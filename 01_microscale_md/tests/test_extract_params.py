@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from extract_transport_params import (
     compute_hydrodynamic_radius_from_rg,
     compute_stokes_einstein_diffusion,
-    extract_parameters_from_synthetic_or_traj,
+    extract_parameters_from_files,
 )
 
 
@@ -30,9 +30,9 @@ def test_stokes_einstein_diffusion():
 
 
 def test_extract_parameters_schema():
-    params = extract_parameters_from_synthetic_or_traj(
+    params = extract_parameters_from_files(
         temperature_k=315.15,
-        measured_rg_nm=12.0,
+        default_rg_nm=12.0,
     )
     assert "thermodynamics" in params
     assert "microscale_properties" in params
@@ -41,3 +41,20 @@ def test_extract_parameters_schema():
     assert 1000.0 <= props["particle_density_kg_m3"] <= 1300.0
     assert props["diffusion_coefficient_D0_m2_s"] > 0.0
     assert props["gel_concentration_g_L"] > 0.0
+
+
+def test_xvg_file_parsing():
+    root_dir = Path(__file__).parent.parent.parent
+    gyrate_p = root_dir / "data" / "sample_gyrate.xvg"
+    msd_p = root_dir / "data" / "sample_msd.xvg"
+
+    params = extract_parameters_from_files(
+        gyrate_xvg=gyrate_p,
+        msd_xvg=msd_p,
+        temperature_k=315.15,
+    )
+    props = params["microscale_properties"]
+    assert props["radius_of_gyration_Rg_nm"] == pytest.approx(10.03, abs=0.3)
+    assert props["hydrodynamic_radius_Rh_nm"] > 10.0
+    assert props["diffusion_coefficient_D0_m2_s"] > 0.0
+

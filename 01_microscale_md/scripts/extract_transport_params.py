@@ -1,11 +1,10 @@
-"""Extract constitutive macroscopic transport parameters from Coarse-Grained MD trajectories.
+"""Extract constitutive macroscopic transport parameters from Coarse-Grained MD trajectories or XVG files.
 
-Computes:
-1. Radius of gyration (Rg) and Hydrodynamic radius (Rh) via Kirkwood-Riseman.
-2. Condensate density (rho_p).
-3. Self-diffusion coefficient (D0) via Einstein relation from MSD.
-4. Second osmotic virial coefficient estimate (B2).
-5. Output standardization into transport_params.json for the continuum solver.
+Supports:
+1. Direct GROMACS XVG file parsing (gmx gyrate and gmx msd).
+2. Radius of gyration (Rg) and Hydrodynamic radius (Rh) via Kirkwood-Riseman.
+3. Self-diffusion coefficient (D0) from linear fit to MSD(t).
+4. Automated parameter bridging to transport_params.json for the continuum solver.
 """
 
 from __future__ import annotations
@@ -14,6 +13,25 @@ import math
 from pathlib import Path
 from typing import Any
 import numpy as np
+
+
+def parse_gromacs_xvg(xvg_path: Path | str) -> tuple[np.ndarray, np.ndarray]:
+    """Parses a standard 2-column or multi-column GROMACS XVG file, ignoring header lines (# and @)."""
+    times = []
+    values = []
+    with open(xvg_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line_str = line.strip()
+            if not line_str or line_str.startswith("#") or line_str.startswith("@"):
+                continue
+            parts = line_str.split()
+            if len(parts) >= 2:
+                try:
+                    times.append(float(parts[0]))
+                    values.append(float(parts[1]))
+                except ValueError:
+                    continue
+    return np.array(times), np.array(values)
 
 
 def compute_hydrodynamic_radius_from_rg(rg_nm: float, particle_type: str = "globular_condensate") -> float:
@@ -33,42 +51,55 @@ def compute_stokes_einstein_diffusion(
     viscosity_pa_s: float = 8.9e-4,
 ) -> float:
     """Computes theoretical zero-shear diffusion coefficient D0 (m^2/s)."""
-    k_b = 1.380649e-23  # J/K
+    k_b = 1.380649e-23
     rh_m = rh_nm * 1e-9
     d0 = (k_b * temperature_k) / (6.0 * math.pi * viscosity_pa_s * rh_m)
     return float(d0)
 
 
-def extract_parameters_from_synthetic_or_traj(
-    traj_path: Path | str | None = None,
+def extract_parameters_from_files(
+    gyrate_xvg: Path | str | None = None,
+    msd_xvg: Path | str | None = None,
     temperature_k: float = 315.15,
     molecular_weight_g_mol: float = 45000.0,
-    measured_rg_nm: float = 9.8,
-    measured_msd_slope_nm2_ps: float | None = None,
+    default_rg_nm: float = 9.8,
 ) -> dict[str, Any]:
-    """Extracts and validates physical transport parameters."""
-    rh_nm = compute_hydrodynamic_radius_from_rg(measured_rg_nm, "globular_condensate")
+    """Extracts transport parameters from GROMACS XVG output or defaults."""
+    measured_rg = default_rg_nm
+    if gyrate_xvg and Path(gyrate_xvg).exists():
+        _, rg_vals = parse_gromacs_xvg(gyrate_xvg)
+        if len(rg_vals) > 0:
+            # Use equilibrated tail (last 50% of trajectory)
+            tail_idx = len(rg_vals) // 2
+            measured_rg = float(np.mean(rg_vals[tail_idx:]))
 
-    if measured_msd_slope_nm2_ps is not None:
-        # D = slope / 6 in nm^2/ps -> convert to m^2/s (1 nm^2/ps = 1e-6 m^2/s)
-        d0_m2_s = float((measured_msd_slope_nm2_ps / 6.0) * 1e-6)
-    else:
+    rh_nm = compute_hydrodynamic_radius_from_rg(measured_rg, "globular_condensate")
+
+    d0_m2_s = None
+    if msd_xvg and Path(msd_xvg).exists():
+        t_ps, msd_nm2 = parse_gromacs_xvg(msd_xvg)
+        if len(t_ps) > 2:
+            # Linear fit to MSD = 6 * D * t
+            # Slope in nm^2 / ps -> D = slope / 6 nm^2/ps = (slope / 6) * 1e-6 m^2/s
+            fit = np.polyfit(t_ps, msd_nm2, 1)
+            slope = fit[0]
+            d0_m2_s = float((slope / 6.0) * 1e-6)
+
+    if d0_m2_s is None or d0_m2_s <= 0:
         d0_m2_s = compute_stokes_einstein_diffusion(rh_nm, temperature_k)
 
-    # Condensate density: mass of single droplet / volume of sphere
+    # Condensate density
     n_chains = 50
     total_mass_kg = (n_chains * molecular_weight_g_mol * 1e-3) / 6.02214076e23
     volume_m3 = (4.0 / 3.0) * math.pi * ((rh_nm * 1e-9) ** 3)
     density_kg_m3 = float(np.clip(total_mass_kg / volume_m3, 1050.0, 1250.0))
 
-    # Second osmotic virial coefficient (B2 in m^3/mol) for soft repulsive/attractive spheres
-    # Hard sphere B2_HS = 4 * V_m = 4 * (4/3 * pi * Rh^3 * N_A)
+    # Second osmotic virial coefficient
     n_a = 6.02214076e23
     b2_hs = 4.0 * ((4.0 / 3.0) * math.pi * ((rh_nm * 1e-9) ** 3)) * n_a
-    # For ELPs near coacervation, effective B2 is slightly negative to weakly positive
     b2_eff = float(0.25 * b2_hs)
 
-    params = {
+    return {
         "metadata": {
             "source": "Martini 3 Coarse-Grained Molecular Dynamics",
             "model": "ELP_(VPGVG)40_50chains",
@@ -80,7 +111,7 @@ def extract_parameters_from_synthetic_or_traj(
             "transition_temperature_Tt_K": 308.15,
         },
         "microscale_properties": {
-            "radius_of_gyration_Rg_nm": round(measured_rg_nm, 3),
+            "radius_of_gyration_Rg_nm": round(measured_rg, 3),
             "hydrodynamic_radius_Rh_nm": round(rh_nm, 3),
             "particle_density_kg_m3": round(density_kg_m3, 1),
             "diffusion_coefficient_D0_m2_s": float(f"{d0_m2_s:.4e}"),
@@ -89,7 +120,6 @@ def extract_parameters_from_synthetic_or_traj(
             "gel_concentration_g_L": 420.0,
         },
     }
-    return params
 
 
 def save_transport_params(params: dict[str, Any], output_json: Path | str) -> None:
@@ -103,14 +133,16 @@ def save_transport_params(params: dict[str, Any], output_json: Path | str) -> No
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Extract transport closures from CG-MD")
-    parser.add_argument("--rg", type=float, default=9.8, help="Measured Rg in nm")
-    parser.add_argument("--temp", type=float, default=315.15, help="Simulation temperature (K)")
-    parser.add_argument("--out", type=str, default="../../data/sample_md_params.json", help="Output JSON path")
+    parser = argparse.ArgumentParser(description="Extract transport closures from CG-MD XVG files")
+    parser.add_argument("--gyrate", type=str, default=None, help="Path to gyrate.xvg")
+    parser.add_argument("--msd", type=str, default=None, help="Path to msd.xvg")
+    parser.add_argument("--temp", type=float, default=315.15, help="Temperature (K)")
+    parser.add_argument("--out", type=str, default="data/sample_md_params.json", help="Output JSON path")
     args = parser.parse_args()
 
-    params = extract_parameters_from_synthetic_or_traj(
+    params = extract_parameters_from_files(
+        gyrate_xvg=args.gyrate,
+        msd_xvg=args.msd,
         temperature_k=args.temp,
-        measured_rg_nm=args.rg,
     )
     save_transport_params(params, args.out)
