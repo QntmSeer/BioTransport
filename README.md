@@ -7,10 +7,10 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="01_microscale_md/"><img src="https://img.shields.io/badge/MD-GROMACS%20Martini%203-0f766e" alt="MD Protocol"></a>
-  <a href="02_continuum_transport/biotransport-rs/"><img src="https://img.shields.io/badge/Engine-Rust%201.75+-1d4ed8" alt="Rust Engine"></a>
-  <a href="02_continuum_transport/python/"><img src="https://img.shields.io/badge/Python-3.10%2B-1e293b" alt="Python"></a>
-  <a href="scripts/master_run_pipeline.py"><img src="https://img.shields.io/badge/Modules-15%20Verified-047857" alt="Modules"></a>
+  <a href="02_continuum_transport/biotransport-rs/"><img src="https://img.shields.io/badge/Continuum%20Transport-Verified%20Solvers-047857" alt="Continuum: Verified"></a>
+  <a href="01_microscale_md/"><img src="https://img.shields.io/badge/Thermodynamics-Analytical%20Closures-1d4ed8" alt="Thermodynamics: Analytical"></a>
+  <a href="01_microscale_md/"><img src="https://img.shields.io/badge/GROMACS%20MD-Protocol%20Ready-0f766e" alt="MD: Protocol Ready"></a>
+  <a href="02_continuum_transport/biotransport-rs/"><img src="https://img.shields.io/badge/Engine-Rust%201.75+-orange" alt="Rust Engine"></a>
 </p>
 
 ---
@@ -31,31 +31,34 @@
 
 ---
 
-## 2. Dynamic Simulation Trajectories (Live Animations)
+## 2. Dynamic Simulation Trajectories
 
 <table align="center" width="100%">
   <tr>
     <td width="50%" align="center">
-      <h4>Microscale Coacervation Dynamics (20 ns Martini 3 Model)</h4>
+      <h4>Microscale Coacervation Dynamics (Martini 3 Protocol)</h4>
       <img src="data/gromacs_md_coacervation.gif" width="100%" alt="Microscale Coacervation Trajectory" />
-      <p align="left"><em>Thermal quench & hydrophobic collapse of (VPGVG)₄₀ chains into an equilibrated condensate droplet core (R<sub>g</sub> = 9.8 nm, R<sub>h</sub> = 12.65 nm).</em></p>
+      <p align="left"><em><b>Synthetic verification animation</b> (not an executed GROMACS production run). Kinematic representation of thermal quench & hydrophobic collapse of (VPGVG)₄₀ chains into an equilibrated condensate droplet core (R<sub>g</sub> = 9.8 nm, R<sub>h</sub> = 12.65 nm).</em></p>
     </td>
     <td width="50%" align="center">
-      <h4>Continuum TFF Concentration Polarization & Cake Growth</h4>
+      <h4>Continuum TFF Polarization & Cake Growth (Verified Solver)</h4>
       <img src="data/multiscale_filtration_timeseries.gif" width="100%" alt="Continuum Filtration Time-Series" />
-      <p align="left"><em>Transient 1D convection-diffusion boundary layer evolution C(y, t) coupled with compressible cake layer resistance accumulation.</em></p>
+      <p align="left"><em><b>Real numerical PDE solver output</b>. Transient 1D convection-diffusion boundary layer evolution C(y, t) coupled with compressible cake layer resistance accumulation.</em></p>
     </td>
   </tr>
 </table>
 
+> [!NOTE]
+> **Microscale Status:** The topology (`elp_vpgvg.itp`), force-field setup (`martini_v3.0.0.itp`), and simulation protocol (`.mdp`) are built and executable (`python scripts/run_md_pipeline.py --run`). The animated GIF above and the bundled parameters (`sample_md_params.json`) serve as a calibrated synthetic verification benchmark for the continuum transport solver until a full multi-GPU production run is dispatched.
+
 ---
 
-## 3. Microscale Thermodynamics & Phase Behavior
+## 3. Microscale Thermodynamics & Phase Behavior (Analytical Closures)
 
 <p align="center">
   <img src="data/cmc_csc_phase_boundaries.png" width="95%" alt="CMC and CSC Phase Boundaries" />
 </p>
-<p align="center"><em><b>Critical Micelle (CMC) & Critical Salt Concentration (CSC) Phase Diagram:</b> (A) Temperature-modulated CSC(T) and CMC(T). (B) 2D state diagram mapping unimer, micellar, and macroscopic coacervate regimes.</em></p>
+<p align="center"><em><b>Critical Micelle (CMC) & Critical Salt Concentration (CSC) Phase Diagram:</b> Analytical model evaluating (A) Temperature-modulated CSC(T) and CMC(T). (B) 2D state diagram mapping unimer, micellar, and macroscopic coacervate regimes.</em></p>
 
 <br>
 
@@ -64,31 +67,31 @@
     <td width="50%" align="center">
       <h4>Hofmeister Salt Screening Thermodynamics</h4>
       <img src="data/hofmeister_salt_screening.png" width="100%" alt="Hofmeister Series" />
-      <p align="left"><em>Transition temperature shift T<sub>t</sub>([Salt]) across kosmotropic to chaotropic salts and Debye electrostatic screening length.</em></p>
+      <p align="left"><em>Literature-calibrated phase shift model T<sub>t</sub>([Salt]) across kosmotropic to chaotropic salts and Debye electrostatic screening length.</em></p>
     </td>
     <td width="50%" align="center">
       <h4>Condensate Coalescence & Ripening</h4>
       <img src="data/droplet_coalescence_kinetics.png" width="100%" alt="Droplet Coalescence" />
-      <p align="left"><em>Capillary velocity v<sub>cap</sub> = &gamma;/&eta; driving Ostwald ripening (R &prop; t<sup>1/3</sup>) and shear-induced droplet size distribution evolution.</em></p>
+      <p align="left"><em>Hydrodynamic model of capillary velocity v<sub>cap</sub> = &gamma;/&eta; driving Ostwald ripening (R &prop; t<sup>1/3</sup>) and shear-induced droplet size evolution.</em></p>
     </td>
   </tr>
 </table>
 
 ---
 
-## 4. Continuum Membrane Hydrodynamics & Process Optimization
+## 4. Continuum Membrane Hydrodynamics & Process Optimization (Solved Physics Engine)
 
 <p align="center">
   <img src="data/intense_optimization_landscape.png" width="95%" alt="2D Process Optimization Map" />
 </p>
-<p align="center"><em><b>2D Multiscale Design Space Optimization Map:</b> (A) Steady permeate flux J(&Delta;P, &gamma;&#775;) iso-contours with Gel-Polarization onset boundary. (B) Specific Energy Consumption (SEC in kWh/m<sup>3</sup>) Pareto basin.</em></p>
+<p align="center"><em><b>2D Multiscale Design Space Optimization Map:</b> Solved Darcy-Starling + Lévêque boundary layer engine showing (A) Steady permeate flux J(&Delta;P, &gamma;&#775;) iso-contours with Gel-Polarization onset boundary. (B) Specific Energy Consumption (SEC in kWh/m<sup>3</sup>) Pareto basin.</em></p>
 
 <br>
 
 <p align="center">
   <img src="data/fed_batch_concentration_diafiltration.png" width="95%" alt="Fed-Batch Concentration and Diafiltration" />
 </p>
-<p align="center"><em><b>Industrial Fed-Batch Purification Sequence:</b> Stage I Up-Concentration (10&times; VCF, 100 L &rarr; 10 L) followed by Stage II Constant-Volume Diafiltration (7&times; DV) achieving &gt;99.9% impurity clearance.</em></p>
+<p align="center"><em><b>Industrial Fed-Batch Purification Sequence:</b> Dynamically solved Stage I Up-Concentration (10&times; VCF, 100 L &rarr; 10 L) followed by Stage II Constant-Volume Diafiltration (7&times; DV) achieving &gt;99.9% impurity clearance.</em></p>
 
 <br>
 
@@ -111,23 +114,23 @@
 
 ## 5. The 15 Unified Simulation Modules
 
-| Domain | # | Module | Status / Implementation | Generated Asset |
+| Domain | # | Module | Status / Scientific Implementation | Generated Asset |
 | :--- | :--- | :--- | :--- | :--- |
-| **Microscale Thermodynamics** | **1** | Martini 3 CG-MD Droplet Assembly & $\rho(r)$ | Structural Benchmark | [`data/gromacs_md_visualization.png`](data/gromacs_md_visualization.png) |
-| | **2** | 3D Rotating MD Trajectory GIF (20 ns) | Kinematic Trajectory | [`data/gromacs_md_coacervation.gif`](data/gromacs_md_coacervation.gif) |
-| | **3** | Hofmeister Series Salt Screening ($T_t([\mathrm{Salt}])$) | Solved Phase Shift | [`data/hofmeister_salt_screening.png`](data/hofmeister_salt_screening.png) |
+| **Microscale Thermodynamics** | **1** | Martini 3 CG-MD Droplet Assembly & $\rho(r)$ | Structural Benchmark (Synthetic) | [`data/gromacs_md_visualization.png`](data/gromacs_md_visualization.png) |
+| | **2** | 3D Rotating MD Trajectory GIF (20 ns) | Kinematic Trajectory (Synthetic) | [`data/gromacs_md_coacervation.gif`](data/gromacs_md_coacervation.gif) |
+| | **3** | Hofmeister Series Salt Screening ($T_t([\mathrm{Salt}])$) | Analytical Phase Shift Model | [`data/hofmeister_salt_screening.png`](data/hofmeister_salt_screening.png) |
 | | **4** | Critical Micelle (CMC) & Critical Salt (CSC) Boundaries | Thermodynamic Model | [`data/cmc_csc_phase_boundaries.png`](data/cmc_csc_phase_boundaries.png) |
-| | **5** | Droplet Coalescence & Ripening Kinetics ($v_{\text{cap}} = \gamma/\eta$) | LSW & Capillary Kinetics | [`data/droplet_coalescence_kinetics.png`](data/droplet_coalescence_kinetics.png) |
+| | **5** | Droplet Coalescence & Ripening Kinetics ($v_{\text{cap}} = \gamma/\eta$) | LSW & Capillary Kinetics Model | [`data/droplet_coalescence_kinetics.png`](data/droplet_coalescence_kinetics.png) |
 | | **6** | Flory-Huggins Binodal & Spinodal Phase Diagram | Tangent Root-Finder | [`data/coacervation_phase_diagram.png`](data/coacervation_phase_diagram.png) |
-| **Continuum Transport** | **7** | TFF Boundary Layer & Fouling Dynamics ($J(t), C_w, R_c$) | **Rust 1D PDE Solver** | [`data/filtration_summary_figure.png`](data/filtration_summary_figure.png) |
-| | **8** | Continuum Filtration Dynamics Animated GIF | Dynamic Time-Series | [`data/multiscale_filtration_timeseries.gif`](data/multiscale_filtration_timeseries.gif) |
-| | **9** | Parametric Limiting Flux Profiles across Shear Rates $\dot{\gamma}$ | Lévêque Back-Diffusion | [`data/limiting_flux_curves.png`](data/limiting_flux_curves.png) |
-| | **10** | 2D Optimization Map with Iso-Flux & SEC Contours | 2D Coupled Solver | [`data/intense_optimization_landscape.png`](data/intense_optimization_landscape.png) |
+| **Continuum Transport** | **7** | TFF Boundary Layer & Fouling Dynamics ($J(t), C_w, R_c$) | **Rust 1D PDE Solver (Verified)** | [`data/filtration_summary_figure.png`](data/filtration_summary_figure.png) |
+| | **8** | Continuum Filtration Dynamics Animated GIF | Dynamic Time-Series Solver | [`data/multiscale_filtration_timeseries.gif`](data/multiscale_filtration_timeseries.gif) |
+| | **9** | Parametric Limiting Flux Profiles across Shear Rates $\dot{\gamma}$ | Lévêque Back-Diffusion Solver | [`data/limiting_flux_curves.png`](data/limiting_flux_curves.png) |
+| | **10** | 2D Optimization Map with Iso-Flux & SEC Contours | 2D Coupled Solver Engine | [`data/intense_optimization_landscape.png`](data/intense_optimization_landscape.png) |
 | **Bioprocess Operations** | **11** | Hermia's 4-Mechanism Fouling Diagnostic Breakdown | Statistical Regression ($R^2$) | [`data/hermia_fouling_analysis.png`](data/hermia_fouling_analysis.png) |
-| | **12** | Fed-Batch Concentration ($10\times\mathrm{VCF}$) + Diafiltration | Dynamic Mass Balance | [`data/fed_batch_concentration_diafiltration.png`](data/fed_batch_concentration_diafiltration.png) |
+| | **12** | Fed-Batch Concentration ($10\times\mathrm{VCF}$) + Diafiltration | Dynamic Mass Balance Solver | [`data/fed_batch_concentration_diafiltration.png`](data/fed_batch_concentration_diafiltration.png) |
 | | **13** | Constant-Volume Diafiltration (CVD) Buffer Exchange | Semi-Analytical Integral | [`data/diafiltration_summary.png`](data/diafiltration_summary.png) |
-| | **14** | Cleaning-in-Place (CIP) & Fouling Reversibility Breakdown | Dynamic State Partition | [`data/cip_fouling_reversibility.png`](data/cip_fouling_reversibility.png) |
-| **Industrial Scale-Up** | **15** | Techno-Economics (100L Batch) & Engineering Summary | Sizing & Economics | [`data/techno_economics_summary.png`](data/techno_economics_summary.png)<br>[`data/MULTISCALE_SIMULATION_REPORT.md`](data/MULTISCALE_SIMULATION_REPORT.md) |
+| | **14** | Cleaning-in-Place (CIP) & Fouling Reversibility Breakdown | Dynamic State Partition Solver | [`data/cip_fouling_reversibility.png`](data/cip_fouling_reversibility.png) |
+| **Industrial Scale-Up** | **15** | Techno-Economics (100L Batch) & Engineering Summary | Sizing & Economics Engine | [`data/techno_economics_summary.png`](data/techno_economics_summary.png)<br>[`data/MULTISCALE_SIMULATION_REPORT.md`](data/MULTISCALE_SIMULATION_REPORT.md) |
 
 ---
 
