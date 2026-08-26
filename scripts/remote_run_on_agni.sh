@@ -27,6 +27,8 @@ rsync -avz --delete \
 # 2. Execute Rust build & test suite on workstation
 echo "[2/3] Building and running Rust continuum transport engine..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
+    export PATH=\"\$HOME/.cargo/bin:\$PATH\"
+    [ -f \"\$HOME/.cargo/env\" ] && source \"\$HOME/.cargo/env\"
     cd ${REMOTE_DIR}/02_continuum_transport/biotransport-rs && \
     cargo build --release && \
     cargo test
@@ -35,6 +37,8 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
 # 3. Execute sample continuum parameter simulation
 echo "[3/3] Running high-speed simulation on Agni..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
+    export PATH=\"\$HOME/.cargo/bin:\$PATH\"
+    [ -f \"\$HOME/.cargo/env\" ] && source \"\$HOME/.cargo/env\"
     cd ${REMOTE_DIR} && \
     ./02_continuum_transport/biotransport-rs/target/release/biotransport-cli run \
         --params data/sample_md_params.json \

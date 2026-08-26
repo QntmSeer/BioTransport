@@ -23,6 +23,8 @@ scp -r 01_microscale_md 02_continuum_transport data notebooks Makefile pyproject
 # 3. Execute build and test suite on Agni
 Write-Host "[3/3] Executing Rust engine build & simulation on Agni..." -ForegroundColor Yellow
 ssh "${RemoteUser}@${RemoteHost}" "bash -l -c '
+    export PATH=\"\$HOME/.cargo/bin:\$PATH\"
+    [ -f \"\$HOME/.cargo/env\" ] && source \"\$HOME/.cargo/env\"
     cd ${RemoteDir}/02_continuum_transport/biotransport-rs && \
     cargo build --release && \
     cargo test && \
