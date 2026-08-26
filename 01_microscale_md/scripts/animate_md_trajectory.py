@@ -32,10 +32,10 @@ def generate_time_series_trajectories(
     n_beads_per_chain = repeats_per_chain * len(unit_seq)
     total_beads = n_chains * n_beads_per_chain
 
-    # Time array: 0 to 100 ns
-    time_ns = np.linspace(0.0, 100.0, n_frames)
+    # Time array: 0 to 20 ns (Martini 3 coarse-grained relaxation timescale)
+    time_ns = np.linspace(0.0, 20.0, n_frames)
     # Rg trajectory: exponential decay from ~18.5 nm down to 9.8 nm
-    rg_trajectory = 9.8 + (18.5 - 9.8) * np.exp(-time_ns / 8.0)
+    rg_trajectory = 9.8 + (18.5 - 9.8) * np.exp(-time_ns / 3.5)
 
     # Initial random dispersed centers for chains (in Angstroms, box [-120, 120])
     np.random.seed(42)
