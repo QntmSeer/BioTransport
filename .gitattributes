@@ -1,0 +1,22 @@
+# Force GitHub Linguist to classify molecular dynamics topology & parameter files as data/vendored
+*.itp linguist-detectable=false
+*.itp linguist-vendored=true
+*.mdp linguist-detectable=false
+*.mdp linguist-vendored=true
+*.gro linguist-detectable=false
+*.gro linguist-vendored=true
+*.pdb linguist-detectable=false
+*.pdb linguist-vendored=true
+*.xvg linguist-detectable=false
+*.xvg linguist-vendored=true
+
+# Ignore build scripts, shell, PowerShell, and Makefiles in language statistics
+Makefile linguist-detectable=false
+*.sh linguist-detectable=false
+*.ps1 linguist-detectable=false
+scripts/*.sh linguist-detectable=false
+scripts/*.ps1 linguist-detectable=false
+
+# Keep primary focus on Python and Rust
+*.py linguist-detectable=true
+*.rs linguist-detectable=true
