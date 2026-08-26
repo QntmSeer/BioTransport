@@ -1,9 +1,8 @@
 //! Integration tests for biotransport-rs.
 
 use biotransport::{
-    compute_compressible_cake_resistance, compute_uncompressed_specific_cake_resistance,
-    compute_virial_osmotic_pressure, simulate_tff_filtration, solve_boundary_layer_profile,
-    MdBridgeParameters, MicroscaleProperties, ProcessOperatingConditions, Thermodynamics,
+    simulate_tff_filtration, solve_boundary_layer_profile, MdBridgeParameters, MicroscaleProperties,
+    ProcessOperatingConditions, Thermodynamics,
 };
 
 fn get_test_md_params() -> MdBridgeParameters {

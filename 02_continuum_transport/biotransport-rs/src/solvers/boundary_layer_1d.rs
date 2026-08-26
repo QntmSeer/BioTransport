@@ -1,7 +1,5 @@
 //! 1D Finite-Difference Boundary Layer Convection-Diffusion PDE Solver.
 
-use crate::types::MdBridgeParameters;
-
 /// Result of a 1D concentration polarization boundary layer discretization.
 #[derive(Debug, Clone)]
 pub struct BoundaryLayerProfile {

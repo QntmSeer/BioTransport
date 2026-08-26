@@ -23,14 +23,12 @@ pub fn compute_suspension_viscosity(
     solvent_viscosity_pa_s * (1.0 - phi_rel).powf(-exponent)
 }
 
-/// Temperature-dependent water viscosity via Vogel-Fulcher-Tammann / standard empirical fit.
+/// Temperature-dependent water viscosity via Andrade formulation (Pa.s).
 pub fn water_viscosity(temperature_k: f64) -> f64 {
-    let t_c = temperature_k - 273.15;
-    // Standard empirical Andrade fit for water:
     let a = 2.414e-5; // Pa.s
-    let b = 247.8;
-    let c = 140.0;
-    a * 10.0_f64.powf(b / (t_c + c))
+    let b = 247.8; // K
+    let c = 140.0; // K
+    a * 10.0_f64.powf(b / (temperature_k - c))
 }
 
 #[cfg(test)]

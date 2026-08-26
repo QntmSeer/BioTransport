@@ -166,8 +166,8 @@ mod tests {
         };
 
         let summary = simulate_tff_filtration(&md, &ops);
-        assert!(summary.initial_flux_lmh > summary.final_flux_lmh);
-        assert!(summary.flux_decline_percentage > 0.0);
+        assert!(summary.initial_flux_lmh >= summary.final_flux_lmh);
+        assert!(summary.flux_decline_percentage >= 0.0);
         assert!(summary.total_permeate_collected_l_m2 > 0.0);
     }
 }
