@@ -1,10 +1,14 @@
-"""Flory-Huggins / Voorn-Overbeek Liquid-Liquid Phase Separation (LLPS) Phase Diagram Generator."""
+"""Flory-Huggins / Voorn-Overbeek Phase Diagram (Minimalist Academic Styling)."""
 
 from __future__ import annotations
 from pathlib import Path
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "02_continuum_transport" / "python"))
+from biotransport.theme import apply_minimalist_theme, PALETTE
 
 
 def flory_huggins_phase_diagram(
@@ -12,14 +16,10 @@ def flory_huggins_phase_diagram(
     t_transition_k: float = 308.15,
     output_png: Path | str = "data/coacervation_phase_diagram.png",
 ) -> dict[str, float]:
-    """Computes binodal and spinodal coexistence curves for ELP coacervation."""
-    # Critical volume fraction & interaction parameter
+    apply_minimalist_theme()
     phi_c = 1.0 / (1.0 + np.sqrt(n_monomers))
     chi_c = 0.5 * (1.0 + 1.0 / np.sqrt(n_monomers)) ** 2
-
-    # Temperature-dependent chi parameter for LCST phase behavior
-    # For ELPs: heating above T_t triggers coacervation (chi increases with T)
-    chi_slope = 0.045  # K^-1
+    chi_slope = 0.045
     temps_k = np.linspace(290.0, 340.0, 100)
 
     phi_spinodal_dilute = []
@@ -34,9 +34,6 @@ def flory_huggins_phase_diagram(
             continue
 
         valid_temps.append(t)
-
-        # 1. Spinodal roots: 1/(N*phi) + 1/(1-phi) - 2*chi = 0
-        # 2*chi*N * phi^2 - (2*chi*N + 1 - N) * phi + 1 = 0
         a = 2.0 * chi * n_monomers
         b = -(2.0 * chi * n_monomers + 1.0 - n_monomers)
         c = 1.0
@@ -50,19 +47,16 @@ def flory_huggins_phase_diagram(
             phi_spinodal_dilute.append(phi_c)
             phi_spinodal_dense.append(phi_c)
 
-        # 2. Binodal roots: Equal chemical potential & osmotic pressure
         def common_tangent(p):
             p1, p2 = p
             if p1 <= 1e-6 or p1 >= 0.99 or p2 <= 1e-6 or p2 >= 0.99 or p1 >= p2:
                 return [1e3, 1e3]
-            # mu1 = dF/dphi
             mu_diff = (
                 (1.0 / n_monomers) * np.log(p1)
                 - np.log(1.0 - p1)
                 + chi * (1.0 - 2.0 * p1)
                 - ((1.0 / n_monomers) * np.log(p2) - np.log(1.0 - p2) + chi * (1.0 - 2.0 * p2))
             )
-            # Pi = phi*dF/dphi - F
             pi_diff = (
                 -(1.0 / n_monomers) * p1
                 - np.log(1.0 - p1)
@@ -85,72 +79,70 @@ def flory_huggins_phase_diagram(
             phi_binodal_dense.append(phi_spinodal_dense[-1])
 
     valid_temps = np.array(valid_temps)
-
-    fig, ax = plt.subplots(figsize=(8.5, 6), dpi=300)
-
-    # Convert volume fractions to g/L (assuming polypeptide density ~ 1350 g/L)
     rho_polymer_g_l = 1350.0
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.8), dpi=300)
 
     ax.plot(
         np.array(phi_binodal_dilute) * rho_polymer_g_l,
         valid_temps,
-        "b-",
-        lw=2.5,
+        color=PALETTE["teal"],
+        lw=2.4,
         label=r"Binodal (Coexistence Curve)",
     )
     ax.plot(
         np.array(phi_binodal_dense) * rho_polymer_g_l,
         valid_temps,
-        "b-",
-        lw=2.5,
+        color=PALETTE["teal"],
+        lw=2.4,
     )
     ax.plot(
         np.array(phi_spinodal_dilute) * rho_polymer_g_l,
         valid_temps,
-        "r--",
-        lw=2.0,
+        color=PALETTE["copper"],
+        linestyle="--",
+        lw=1.8,
         label=r"Spinodal Boundary",
     )
     ax.plot(
         np.array(phi_spinodal_dense) * rho_polymer_g_l,
         valid_temps,
-        "r--",
-        lw=2.0,
+        color=PALETTE["copper"],
+        linestyle="--",
+        lw=1.8,
     )
 
-    # Critical Point
     ax.scatter(
         [phi_c * rho_polymer_g_l],
         [t_transition_k],
-        color="gold",
-        edgecolors="black",
-        s=120,
+        color="#ffffff",
+        edgecolors=PALETTE["slate_dark"],
+        s=110,
+        lw=1.8,
         zorder=6,
         label=f"Critical Point ($T_c = {t_transition_k:.1f}\\,\\mathrm{{K}}$, $C_c = {phi_c * rho_polymer_g_l:.1f}\\,\\mathrm{{g/L}}$)",
     )
 
-    # Shaded two-phase coexistence region
     ax.fill_betweenx(
         valid_temps,
         np.array(phi_binodal_dilute) * rho_polymer_g_l,
         np.array(phi_binodal_dense) * rho_polymer_g_l,
-        color="#3b528b",
-        alpha=0.15,
+        color=PALETTE["teal"],
+        alpha=0.08,
         label="2-Phase Coacervate Regime",
     )
 
-    ax.set_xlabel(r"Polypeptide Concentration $C\ (\mathrm{g} \cdot \mathrm{L}^{-1})$", fontsize=12)
-    ax.set_ylabel(r"Temperature $T\ (\mathrm{K})$", fontsize=12)
-    ax.set_title("ELP Coacervation Phase Diagram (Flory-Huggins LLPS Thermodynamics)", fontsize=13, fontweight="bold")
-    ax.grid(True, linestyle="--", alpha=0.5)
-    ax.legend(loc="upper left", frameon=True, fontsize=10)
+    ax.set_xlabel(r"Polypeptide Concentration $C\ (\mathrm{g} \cdot \mathrm{L}^{-1})$")
+    ax.set_ylabel(r"Temperature $T\ (\mathrm{K})$")
+    ax.set_title("ELP Coacervation Phase Diagram (Flory-Huggins Thermodynamics)", loc="left", color=PALETTE["slate_dark"])
+    ax.legend(loc="upper left", frameon=True)
 
     out_p = Path(output_png)
     out_p.parent.mkdir(parents=True, exist_ok=True)
     plt.tight_layout()
     plt.savefig(out_p, bbox_inches="tight")
     plt.close()
-    print(f"Successfully generated phase diagram: {out_p}")
+    print(f"Successfully generated minimalist phase diagram: {out_p}")
 
     return {
         "critical_temperature_K": t_transition_k,
