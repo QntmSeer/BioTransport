@@ -18,10 +18,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Multiscale Bioparticle Transport Simulator")
     parser.add_argument("--params", type=str, required=True, help="Path to transport_params.json from CG-MD")
     parser.add_argument("--tmp", type=float, default=150_000.0, help="Transmembrane pressure (Pa)")
+    parser.add_argument("--time", type=float, default=3600.0, help="Total filtration time (s)")
+    parser.add_argument("--steps", type=int, default=100, help="Number of simulation time steps")
+    parser.add_argument("--shear", type=float, default=4000.0, help="Crossflow shear rate (s^-1)")
+    parser.add_argument("--bulk-conc", type=float, default=5.0, help="Feed bulk bioparticle concentration (g/L)")
     parser.add_argument("--plot", type=str, default=None, help="Optional output PNG path for visualization")
     args = parser.parse_args()
 
-    results = run_continuum_simulation(args.params, tmp_pa=args.tmp)
+    results = run_continuum_simulation(
+        args.params,
+        tmp_pa=args.tmp,
+        total_time_s=args.time,
+        shear_rate_s_inv=args.shear,
+        bulk_conc_g_l=args.bulk_conc,
+        n_steps=args.steps,
+    )
 
     print("================ Simulation Results (Python Bridge) ================")
     print(f"Initial Flux:     {results['initial_flux_lmh']:.2f} LMH")

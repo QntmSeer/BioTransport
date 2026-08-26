@@ -75,8 +75,8 @@ def plot_multiscale_results(
         decay_length = 5.0  # um
         c_2d[:, j] = bulk_c + (cw_val - bulk_c) * np.exp(-y_um / decay_length)
 
-    extent = [t_min[0], t_min[-1], y_um[-1], y_um[0]]  # y=0 at bottom/membrane
-    im = ax4.imshow(c_2d, aspect="auto", cmap="viridis", extent=extent, interpolation="bicubic")
+    extent = [t_min[0], t_min[-1], 0.0, y_um[-1]]
+    im = ax4.imshow(c_2d, aspect="auto", cmap="plasma", extent=extent, origin="lower", interpolation="bicubic")
     cbar = fig.colorbar(im, ax=ax4, pad=0.03)
     cbar.set_label(r"Local Concentration $(\mathrm{g} \cdot \mathrm{L}^{-1})$", fontsize=10)
     ax4.set_xlabel("Filtration Time (min)", fontsize=11)
@@ -97,25 +97,51 @@ def plot_limiting_flux_curves(
     output_png: Path | str | None = None,
 ) -> None:
     """Plots parametric Limiting Flux vs. TMP curves across varying crossflow shear rates."""
-    tmps = np.linspace(20_000, 350_000, 15)  # 0.2 to 3.5 bar
+    import scipy.optimize as opt
+
+    tmps = np.linspace(20_000, 350_000, 20)  # 0.2 to 3.5 bar
     tmps_bar = tmps / 100_000.0
     shear_rates = [2000.0, 4000.0, 8000.0, 12000.0]
     colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
 
+    bulk_conc = 5.0  # g/L
+    c_gel = sim_instance.props.gel_concentration_g_L
+    mu_0 = sim_instance.water_viscosity(sim_instance.thermo.temperature_K)
+    rm = 1.0e12  # m^-1
+    rc_spec = sim_instance.specific_cake_resistance(100_000.0)
+
     fig, ax = plt.subplots(figsize=(8, 5.5), dpi=300)
     for gamma, color in zip(shear_rates, colors):
+        km = sim_instance.mass_transfer_coefficient(gamma)
         fluxes = []
         for tmp in tmps:
-            res = sim_instance.simulate_filtration(
-                tmp_pa=tmp,
-                shear_rate_s_inv=gamma,
-                total_time_s=1800.0,
-                n_steps=10,
-            )
-            # Use pseudo-steady state flux
-            fluxes.append(res["flux_lmh"][-1])
+            def residual(j_val: float) -> float:
+                pe = np.clip(j_val / km, 0.0, 6.0)
+                cw = min(c_gel, float(bulk_conc * np.exp(pe)))
 
-        ax.plot(tmps_bar, fluxes, marker="o", color=color, lw=2.2, label=f"$\\dot{{\\gamma}} = {int(gamma)}\\ \\mathrm{{s}}^{{-1}}$")
+                # Steady cake mass: deposit = erosion => m_cake = deposit / k_shear
+                j_crit = 0.25 * km
+                excess = max(0.0, j_val - j_crit)
+                sticking = 0.001 * ((cw / c_gel) ** 1.5)
+                k_shear = (gamma / 4000.0) * 1.0e-3
+                m_cake = (sticking * excess * bulk_conc) / max(1e-6, k_shear)
+                r_cake = rc_spec * m_cake
+
+                total_r = rm + r_cake
+                pi_w = sim_instance.virial_osmotic_pressure(cw)
+                phi_rel = np.clip(cw / (c_gel * 1.2), 0.0, 0.95)
+                mu_w = mu_0 * ((1.0 - phi_rel) ** (-1.2))
+                eff_tmp = max(100.0, tmp - pi_w)
+                return j_val - eff_tmp / (mu_w * total_r)
+
+            j_max = tmp / (mu_0 * rm)
+            try:
+                j_sol = float(opt.brentq(residual, 0.0, j_max, xtol=1e-10))
+            except Exception:
+                j_sol = km * np.log(c_gel / bulk_conc)
+            fluxes.append(j_sol * 3.6e6)
+
+        ax.plot(tmps_bar, fluxes, marker="o", markersize=5, color=color, lw=2.2, label=f"$\\dot{{\\gamma}} = {int(gamma)}\\ \\mathrm{{s}}^{{-1}}$")
 
     ax.set_xlabel("Transmembrane Pressure (bar)", fontsize=12)
     ax.set_ylabel(r"Steady Permeate Flux $(\mathrm{L} \cdot \mathrm{m}^{-2} \cdot \mathrm{h}^{-1})$", fontsize=12)

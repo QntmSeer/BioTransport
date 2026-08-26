@@ -175,5 +175,7 @@ def create_md_coacervation_gif(
     print(f"Successfully generated animated GIF: {out_p}")
 
 
+main = create_md_coacervation_gif
+
 if __name__ == "__main__":
-    create_md_coacervation_gif()
+    main()

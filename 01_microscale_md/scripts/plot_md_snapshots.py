@@ -139,5 +139,7 @@ def generate_and_plot_md_visualization(
     plt.close()
 
 
+main = generate_and_plot_md_visualization
+
 if __name__ == "__main__":
-    generate_and_plot_md_visualization()
+    main()

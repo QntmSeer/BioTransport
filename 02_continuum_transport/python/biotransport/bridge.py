@@ -94,33 +94,28 @@ class ProcessSimulator:
 
         m_cake = 0.0
         total_vol = 0.0
+        # Physical osmotic ceiling where Pi(C) = 0.88 * TMP (prevents unphysical shutoff)
+        r_gas = 8.314462
+        temp_k = self.thermo.temperature_K
+        mw = self.thermo.molecular_weight_g_mol / 1000.0
+        b2 = self.props.osmotic_virial_B2_m3_mol
+        a_coef = (r_gas * temp_k * b2 / (mw**2))
+        b_coef = (r_gas * temp_k / mw)
+        c_coef = -0.88 * tmp_pa
+        c_osm_max = (-b_coef + np.sqrt(max(0.0, b_coef**2 - 4 * a_coef * c_coef))) / (2 * max(1e-12, a_coef))
+        c_max_allowed = min(c_gel, float(c_osm_max))
+
+        c_w = bulk_conc_g_l
 
         for t in time_vec:
             r_cake = rc_spec * m_cake
             total_r = membrane_rm + r_cake
 
-            j_max = tmp_pa / (mu_0 * total_r)
-
-            def residual(j_val: float) -> float:
-                pe = np.clip(j_val / km, 0.0, 8.0)
-                c_w_est = min(c_gel, float(bulk_conc_g_l * np.exp(pe)))
-                phi_rel = np.clip(c_w_est / (c_gel * 1.2), 0.0, 0.95)
-                mu_w = mu_0 * ((1.0 - phi_rel) ** (-0.0035 * c_gel * 1.2))
-                pi_w = self.virial_osmotic_pressure(c_w_est)
-                eff_tmp = max(10.0, tmp_pa - pi_w)
-                return j_val - eff_tmp / (mu_w * total_r)
-
-            try:
-                import scipy.optimize as opt
-                if residual(0.0) * residual(j_max) <= 0:
-                    j_m_s = float(opt.brentq(residual, 0.0, j_max, xtol=1e-10))
-                else:
-                    j_m_s = j_max * 0.1
-            except Exception:
-                j_m_s = j_max * 0.2
-
-            pe_final = np.clip(j_m_s / km, 0.0, 8.0)
-            c_w = min(c_gel, float(bulk_conc_g_l * np.exp(pe_final)))
+            phi_rel = np.clip(c_w / (c_gel * 1.2), 0.0, 0.95)
+            mu_w = mu_0 * ((1.0 - phi_rel) ** (-1.2))
+            pi_w = self.virial_osmotic_pressure(c_w)
+            eff_tmp = max(1000.0, tmp_pa - pi_w)
+            j_m_s = eff_tmp / (mu_w * total_r)
 
             j_lmh = j_m_s * 3.6e6
             flux_vec.append(j_lmh)
@@ -128,11 +123,19 @@ class ProcessSimulator:
             rc_vec.append(r_cake)
             vol_vec.append(total_vol * 1000.0)
 
-            # Cake growth
-            if c_w >= 0.70 * c_gel:
-                deposit_rate = j_m_s * (c_w * 1e-3)
-                erosion = (shear_rate_s_inv / 10000.0) * 1e-5 * m_cake
-                m_cake += max(0.0, deposit_rate - erosion) * dt
+            # Unsteady polarization evolution: relaxation toward film-theory target C_b*exp(J/km)
+            pe = np.clip(j_m_s / km, 0.0, 3.8)
+            c_w_target = min(c_max_allowed, float(bulk_conc_g_l * np.exp(pe)))
+            tau_cp = 180.0  # s (boundary layer polarization relaxation time constant)
+            c_w += (c_w_target - c_w) * (1.0 - np.exp(-dt / tau_cp))
+
+            # Dynamic cake layer mass accumulation in crossflow
+            j_crit = 0.30 * km
+            excess_flux = max(0.0, j_m_s - j_crit)
+            sticking_prob = 0.015 * ((c_w / c_gel) ** 1.5)
+            deposit_rate = sticking_prob * excess_flux * bulk_conc_g_l
+            shear_erosion = (shear_rate_s_inv / 4000.0) * 1.5e-3 * m_cake
+            m_cake += max(0.0, deposit_rate - shear_erosion) * dt
             total_vol += j_m_s * dt
 
         return {
@@ -144,10 +147,31 @@ class ProcessSimulator:
             "initial_flux_lmh": flux_vec[0],
             "final_flux_lmh": flux_vec[-1],
             "flux_decline_percent": float(100.0 * (flux_vec[0] - flux_vec[-1]) / max(1e-5, flux_vec[0])),
+            "flux_decline_pct": float(100.0 * (flux_vec[0] - flux_vec[-1]) / max(1e-5, flux_vec[0])),
+            "total_permeate_l_m2": vol_vec[-1],
+            "max_wall_conc_g_l": max(cw_vec),
+            "specific_cake_resistance": rc_spec,
         }
 
 
-def run_continuum_simulation(params_json: Path | str, tmp_pa: float = 150_000.0) -> dict[str, Any]:
+def run_continuum_simulation(
+    params_json: Path | str,
+    tmp_pa: float = 150_000.0,
+    total_time_s: float = 3600.0,
+    shear_rate_s_inv: float = 4000.0,
+    bulk_conc_g_l: float = 5.0,
+    membrane_rm: float = 1.0e12,
+    n_steps: int = 100,
+    porosity: float = 0.40,
+) -> dict[str, Any]:
     md = MdBridgeModel.load_json(params_json)
     sim = ProcessSimulator(md)
-    return sim.simulate_filtration(tmp_pa=tmp_pa)
+    return sim.simulate_filtration(
+        tmp_pa=tmp_pa,
+        total_time_s=total_time_s,
+        shear_rate_s_inv=shear_rate_s_inv,
+        bulk_conc_g_l=bulk_conc_g_l,
+        membrane_rm=membrane_rm,
+        n_steps=n_steps,
+        porosity=porosity,
+    )
