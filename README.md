@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="01_microscale_md/"><img src="https://img.shields.io/badge/MD-GROMACS%20Martini%203-0f766e" alt="MD"></a>
+  <a href="01_microscale_md/"><img src="https://img.shields.io/badge/MD-GROMACS%20Martini%203-0f766e" alt="MD Protocol"></a>
   <a href="02_continuum_transport/biotransport-rs/"><img src="https://img.shields.io/badge/Engine-Rust%201.75+-1d4ed8" alt="Rust Engine"></a>
   <a href="02_continuum_transport/python/"><img src="https://img.shields.io/badge/Python-3.10%2B-1e293b" alt="Python"></a>
   <a href="scripts/master_run_pipeline.py"><img src="https://img.shields.io/badge/Modules-15%20Verified-047857" alt="Modules"></a>
@@ -17,16 +17,16 @@
 
 ## 1. Overview & Multiscale Paradigm
 
-**BioTransport** is a first-principles multiscale computational physics and bioprocess engineering suite. It directly couples **Microscale Coarse-Grained Molecular Dynamics (Martini 3 / GROMACS)** of phase-separating biopolypeptides with **Macroscale Tangential Flow Filtration (TFF)** and industrial purification operations.
+**BioTransport** is a first-principles multiscale computational physics and bioprocess engineering suite. It bridges **Microscale Molecular Thermodynamics & Phase Separation Closures** with **Macroscale Tangential Flow Filtration (TFF)** and industrial purification operations.
 
 ```
-       MICROSCALE MD                    CONTINUUM TRANSPORT                 INDUSTRIAL SCALE-UP
- ┌──────────────────────┐             ┌──────────────────────┐             ┌─────────────────────┐
- │ • Martini 3 (VPGVG)₄₀│             │ • biotransport-rs    │             │ • Fed-Batch (10x)   │
- │ • Coacervate Core Rg │  ────────>  │ • Darcy-Starling     │  ────────>  │ • Diafiltration (8DV│
- │ • Hofmeister Series  │             │ • Virial Osmotic Π   │             │ • CIP Reusability   │
- │ • CMC & CSC Regimes  │             │ • Compressible Cake  │             │ • SEC Pareto Basin  │
- └──────────────────────┘             └──────────────────────┘             └─────────────────────┘
+       MICROSCALE THERMODYNAMICS          CONTINUUM TRANSPORT (RUST ENGINE)        INDUSTRIAL BIOPROCESSING
+ ┌──────────────────────────────────────┐     ┌────────────────────────────────┐     ┌────────────────────────────┐
+ │ • Martini 3 (VPGVG)₄₀ Protocol       │     │ • biotransport-rs Rust Core    │     │ • Fed-Batch (10x VCF)      │
+ │ • Flory-Huggins Binodal / Spinodal   │ ──> │ • Darcy-Starling Permeate Flux │ ──> │ • Constant-Volume Diafiltr.│
+ │ • Hofmeister Salt Shifts Tt([Salt])  │     │ • Virial Osmotic Pressure Π    │     │ • Dynamic CIP Reversibility│
+ │ • CMC & CSC Phase Boundaries         │     │ • Compressible Cake Resistance │     │ • 2D SEC Optimization Basin│
+ └──────────────────────────────────────┘     └────────────────────────────────┘     └────────────────────────────┘
 ```
 
 ---
@@ -36,7 +36,7 @@
 <table align="center" width="100%">
   <tr>
     <td width="50%" align="center">
-      <h4>Microscale Coacervation Dynamics (20 ns Martini 3)</h4>
+      <h4>Microscale Coacervation Dynamics (20 ns Martini 3 Model)</h4>
       <img src="data/gromacs_md_coacervation.gif" width="100%" alt="Microscale Coacervation Trajectory" />
       <p align="left"><em>Thermal quench & hydrophobic collapse of (VPGVG)₄₀ chains into an equilibrated condensate droplet core (R<sub>g</sub> = 9.8 nm, R<sub>h</sub> = 12.65 nm).</em></p>
     </td>
@@ -102,7 +102,7 @@
     <td width="50%" align="center">
       <h4>Cleaning-in-Place (CIP) Reversibility</h4>
       <img src="data/cip_fouling_reversibility.png" width="100%" alt="CIP Reversibility" />
-      <p align="left"><em>Hydraulic resistance distribution (70.1% reversible cake vs. 12.4% pore adsorption) and 5-cycle caustic (0.1M NaOH) flux recovery (97.3%).</em></p>
+      <p align="left"><em>Hydraulic resistance distribution dynamically calculated from final fouling state and 5-cycle caustic (0.1M NaOH) flux recovery.</em></p>
     </td>
   </tr>
 </table>
@@ -111,68 +111,31 @@
 
 ## 5. The 15 Unified Simulation Modules
 
-| Domain | # | Module | Generated Asset |
-| :--- | :--- | :--- | :--- |
-| **Microscale Thermodynamics** | **1** | Martini 3 CG-MD Droplet Assembly & $\rho(r)$ | [`data/gromacs_md_visualization.png`](data/gromacs_md_visualization.png) |
-| | **2** | 3D Rotating MD Trajectory GIF (20 ns) | [`data/gromacs_md_coacervation.gif`](data/gromacs_md_coacervation.gif) |
-| | **3** | Hofmeister Series Salt Screening ($T_t([\mathrm{Salt}])$) | [`data/hofmeister_salt_screening.png`](data/hofmeister_salt_screening.png) |
-| | **4** | Critical Micelle (CMC) & Critical Salt (CSC) Phase Boundaries | [`data/cmc_csc_phase_boundaries.png`](data/cmc_csc_phase_boundaries.png) |
-| | **5** | Droplet Coalescence & Ripening Kinetics ($v_{\text{cap}} = \gamma/\eta$) | [`data/droplet_coalescence_kinetics.png`](data/droplet_coalescence_kinetics.png) |
-| | **6** | Flory-Huggins Binodal & Spinodal Phase Diagram | [`data/coacervation_phase_diagram.png`](data/coacervation_phase_diagram.png) |
-| **Continuum Transport** | **7** | TFF Boundary Layer & Fouling Dynamics ($J(t), C_w, R_c$) | [`data/filtration_summary_figure.png`](data/filtration_summary_figure.png) |
-| | **8** | Continuum Filtration Dynamics Animated GIF | [`data/multiscale_filtration_timeseries.gif`](data/multiscale_filtration_timeseries.gif) |
-| | **9** | Parametric Limiting Flux Profiles across Shear Rates $\dot{\gamma}$ | [`data/limiting_flux_curves.png`](data/limiting_flux_curves.png) |
-| | **10** | 2D Optimization Map with Iso-Flux & SEC Contours | [`data/intense_optimization_landscape.png`](data/intense_optimization_landscape.png) |
-| **Bioprocess Operations** | **11** | Hermia's 4-Mechanism Fouling Diagnostic Breakdown | [`data/hermia_fouling_analysis.png`](data/hermia_fouling_analysis.png) |
-| | **12** | Fed-Batch Concentration ($10\times\mathrm{VCF}$) + Diafiltration | [`data/fed_batch_concentration_diafiltration.png`](data/fed_batch_concentration_diafiltration.png) |
-| | **13** | Constant-Volume Diafiltration (CVD) Buffer Exchange | [`data/diafiltration_summary.png`](data/diafiltration_summary.png) |
-| | **14** | Cleaning-in-Place (CIP) & Fouling Reversibility Breakdown | [`data/cip_fouling_reversibility.png`](data/cip_fouling_reversibility.png) |
-| **Industrial Scale-Up** | **15** | Techno-Economics (100L Batch) & Engineering Summary | [`data/techno_economics_summary.png`](data/techno_economics_summary.png)<br>[`data/MULTISCALE_SIMULATION_REPORT.md`](data/MULTISCALE_SIMULATION_REPORT.md) |
+| Domain | # | Module | Status / Implementation | Generated Asset |
+| :--- | :--- | :--- | :--- | :--- |
+| **Microscale Thermodynamics** | **1** | Martini 3 CG-MD Droplet Assembly & $\rho(r)$ | Structural Benchmark | [`data/gromacs_md_visualization.png`](data/gromacs_md_visualization.png) |
+| | **2** | 3D Rotating MD Trajectory GIF (20 ns) | Kinematic Trajectory | [`data/gromacs_md_coacervation.gif`](data/gromacs_md_coacervation.gif) |
+| | **3** | Hofmeister Series Salt Screening ($T_t([\mathrm{Salt}])$) | Solved Phase Shift | [`data/hofmeister_salt_screening.png`](data/hofmeister_salt_screening.png) |
+| | **4** | Critical Micelle (CMC) & Critical Salt (CSC) Boundaries | Thermodynamic Model | [`data/cmc_csc_phase_boundaries.png`](data/cmc_csc_phase_boundaries.png) |
+| | **5** | Droplet Coalescence & Ripening Kinetics ($v_{\text{cap}} = \gamma/\eta$) | LSW & Capillary Kinetics | [`data/droplet_coalescence_kinetics.png`](data/droplet_coalescence_kinetics.png) |
+| | **6** | Flory-Huggins Binodal & Spinodal Phase Diagram | Tangent Root-Finder | [`data/coacervation_phase_diagram.png`](data/coacervation_phase_diagram.png) |
+| **Continuum Transport** | **7** | TFF Boundary Layer & Fouling Dynamics ($J(t), C_w, R_c$) | **Rust 1D PDE Solver** | [`data/filtration_summary_figure.png`](data/filtration_summary_figure.png) |
+| | **8** | Continuum Filtration Dynamics Animated GIF | Dynamic Time-Series | [`data/multiscale_filtration_timeseries.gif`](data/multiscale_filtration_timeseries.gif) |
+| | **9** | Parametric Limiting Flux Profiles across Shear Rates $\dot{\gamma}$ | Lévêque Back-Diffusion | [`data/limiting_flux_curves.png`](data/limiting_flux_curves.png) |
+| | **10** | 2D Optimization Map with Iso-Flux & SEC Contours | 2D Coupled Solver | [`data/intense_optimization_landscape.png`](data/intense_optimization_landscape.png) |
+| **Bioprocess Operations** | **11** | Hermia's 4-Mechanism Fouling Diagnostic Breakdown | Statistical Regression ($R^2$) | [`data/hermia_fouling_analysis.png`](data/hermia_fouling_analysis.png) |
+| | **12** | Fed-Batch Concentration ($10\times\mathrm{VCF}$) + Diafiltration | Dynamic Mass Balance | [`data/fed_batch_concentration_diafiltration.png`](data/fed_batch_concentration_diafiltration.png) |
+| | **13** | Constant-Volume Diafiltration (CVD) Buffer Exchange | Semi-Analytical Integral | [`data/diafiltration_summary.png`](data/diafiltration_summary.png) |
+| | **14** | Cleaning-in-Place (CIP) & Fouling Reversibility Breakdown | Dynamic State Partition | [`data/cip_fouling_reversibility.png`](data/cip_fouling_reversibility.png) |
+| **Industrial Scale-Up** | **15** | Techno-Economics (100L Batch) & Engineering Summary | Sizing & Economics | [`data/techno_economics_summary.png`](data/techno_economics_summary.png)<br>[`data/MULTISCALE_SIMULATION_REPORT.md`](data/MULTISCALE_SIMULATION_REPORT.md) |
 
 ---
 
-## 6. Directory Layout
+## 6. Scientific Rigor & Implementation Scope
 
-```text
-BioTransport/
-├── README.md
-├── LICENSE
-├── pyproject.toml
-├── docs/assets/logo.png
-├── data/
-│   ├── sample_md_params.json
-│   ├── MULTISCALE_SIMULATION_REPORT.md
-│   └── *.png / *.gif
-├── 01_microscale_md/
-│   ├── topologies/
-│   ├── mdp/
-│   └── scripts/
-│       ├── plot_md_snapshots.py
-│       ├── animate_md_trajectory.py
-│       ├── hofmeister_coacervation.py
-│       ├── cmc_csc_analysis.py
-│       ├── droplet_coalescence.py
-│       ├── phase_diagram.py
-│       └── extract_transport_params.py
-├── 02_continuum_transport/
-│   ├── biotransport-rs/               # High-Performance Rust Crate
-│   │   ├── Cargo.toml
-│   │   └── src/
-│   └── python/biotransport/           # Python API & Physics Modules
-│       ├── bridge.py
-│       ├── theme.py                   # Minimalist Academic Palette
-│       ├── visualize.py
-│       ├── parameter_sweep.py
-│       ├── hermia_fouling.py
-│       ├── fed_batch_purification.py
-│       ├── diafiltration.py
-│       ├── cip_reversibility.py
-│       └── techno_economics.py
-└── scripts/
-    ├── master_run_pipeline.py         # Unified 15-Module Master Runner
-    ├── generate_multiscale_report.py
-    └── sync_and_run_on_hpc.ps1       # HPC Synchronization & Execution
-```
+* **Continuum Transport & Bioprocess Suite (`02_continuum_transport`, Rust + Python):** Fully solved numerical and analytical physics engines. Solves unsteady concentration polarization, Darcy-Starling compressible cake fouling ($r_c \propto \Delta P^n$), dynamic bulk feedback during fed-batch up-concentration, multi-diavolume clearance, and Hermia statistical fouling regressions ($R^2$).
+* **Thermodynamic Phase Closures:** Honest, rigorous evaluations of physical models including Flory-Huggins liquid-liquid phase separation envelopes, Hofmeister $T_t([\mathrm{Salt}])$ shifts, and critical micelle/salt boundaries ($\text{CMC}, \text{CSC}$).
+* **GROMACS / Martini 3 Protocol (`01_microscale_md`):** Complete simulation topology definitions (`elp_vpgvg.itp`, `martini_v3.0.0.itp`) and production-ready `.mdp` parameter files (`em.mdp`, `npt_equilibration.mdp`, `quench_coacervation.mdp`, `shear_nemd.mdp`) ready for multi-GPU GROMACS dispatch (`python scripts/run_md_pipeline.py --run`). The bundled default parameter closures (`sample_md_params.json`) serve as a calibrated benchmark verification set.
 
 ---
 

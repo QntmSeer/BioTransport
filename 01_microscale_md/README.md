@@ -1,29 +1,43 @@
-# 01_microscale_md: Coarse-Grained MD of Bioparticle Self-Assembly
+# 01_microscale_md: Coarse-Grained MD Topologies & Simulation Protocol
 
-This module implements the **Martini 3 Coarse-Grained Molecular Dynamics (CG-MD)** simulation workflow for modeling bioparticle coacervation, liquid-liquid phase separation (LLPS), and shear-induced alignment in GROMACS.
-
----
-
-## 1. Simulation Protocols
-
-| Stage | MDP File | Purpose | Key Parameters |
-| :--- | :--- | :--- | :--- |
-| **Energy Minimization** | `mdp/em.mdp` | Remove steric clashes | `integrator = steep`, `emtol = 100.0` |
-| **NPT Equilibration** | `mdp/npt_equilibration.mdp` | Density equilibration at $T < T_t$ | `v-rescale` (300K), `Parrinello-Rahman` (1 bar), $\tau_p = 12.0\,\text{ps}$ |
-| **Thermal Quench / Assembly** | `mdp/quench_coacervation.mdp` | Triggers phase separation ($T > T_t$) | `v-rescale` (325K), $dt = 20\,\text{fs}$, 500 ns production |
-| **Couette Shear Flow** | `mdp/shear_nemd.mdp` | Non-equilibrium MD shear | `deform = vx 0 0 0 0 0`, shear rate $\dot{\gamma} = 10^7\,\text{s}^{-1}$ |
+This directory contains the **Martini 3 coarse-grained molecular dynamics setup** for simulating thermal phase separation and coacervation of Elastin-Like Polypeptides (ELPs).
 
 ---
 
-## 2. Automated Parameter Extraction Pipeline
+## 1. Scientific Role in the Multiscale Architecture
 
-The script `scripts/extract_transport_params.py` parses trajectory and energy output files to compute the macroscopic constitutive closures needed for continuum modeling:
+In the multiscale pipeline, this module serves as the **microscale input stage** that parameterizes macroscopic closures for the continuum transport engine (`02_continuum_transport`):
 
-1. **Radius of Gyration ($R_g$) & Hydrodynamic Radius ($R_h$):**
-   $$R_h \approx 1.28 \cdot R_g \quad \text{(for globular coacervates / Kirkwood-Riseman approximation)}$$
-2. **Mean Squared Displacement & Diffusivity ($D_0$):**
-   $$\text{MSD}(t) = \langle |\mathbf{r}(t) - \mathbf{r}(0)|^2 \rangle \implies D_0 = \frac{1}{6} \frac{d(\text{MSD})}{dt}$$
-3. **Condensate Density ($\rho_p$):**
-   $$\rho_p = \frac{\sum m_i}{\frac{4}{3}\pi R_g^3}$$
+$$\text{Martini 3 CG-MD} \xrightarrow{\quad\text{Extract Physical Closures}\quad} \left[ R_h,\ D_0,\ \rho_p,\ B_2,\ C_{\mathrm{gel}},\ \mu(C) \right] \xrightarrow{\quad\text{Bridge JSON}\quad} \text{Continuum TFF Engine}$$
 
-The output is exported to `data/sample_md_params.json`.
+---
+
+## 2. Directory Contents
+
+* **`topologies/`:**
+  * `martini_v3.0.0.itp`: Core Martini 3 coarse-grained force-field definition.
+  * `elp_vpgvg.itp`: Coarse-grained topology for $(VPGVG)_n$ repeats with calibrated bead types (Val = P2, Pro = P1, Gly = SP2).
+  * `build_elp_topology.py`: Procedural generator for custom ELP sequence block topologies.
+* **`mdp/`:**
+  * `em.mdp`: Steepest descent energy minimization.
+  * `npt_equilibration.mdp`: 300 K isothermal-isobaric equilibration (Parrinello-Rahman, $1\,\text{bar}$).
+  * `quench_coacervation.mdp`: Thermal quench (325 K) driving hydrophobic unimer collapse and droplet nucleation.
+  * `shear_nemd.mdp`: Non-equilibrium Lees-Edwards shearing for shear-induced droplet alignment.
+* **`scripts/`:**
+  * `run_md_pipeline.py`: Automated orchestration script to run `gmx grompp` and `gmx mdrun` end-to-end.
+  * `extract_transport_params.py`: Parses GROMACS XVG outputs (`gmx gyrate`, `gmx msd`) to extract $R_g, R_h, D_0, B_2$ into `transport_params.json`.
+  * `phase_diagram.py`: Numerical root-finder for Flory-Huggins binodal/spinodal coexistence curves.
+  * `hofmeister_coacervation.py`: Calculates salt-induced $T_t$ phase shifts and Debye screening lengths.
+  * `cmc_csc_analysis.py`: Calculates Critical Micelle (CMC) and Critical Salt Concentration (CSC) phase boundaries.
+  * `droplet_coalescence.py`: Models capillary droplet fusion ($v_{\text{cap}} = \gamma/\eta$) and Ostwald ripening kinetics ($R \propto t^{1/3}$).
+
+---
+
+## 3. Execution Modes: Production vs. Synthetic Benchmark
+
+* **Production GROMACS Execution (requires local/HPC GROMACS installation):**
+  ```bash
+  python scripts/run_md_pipeline.py --run
+  ```
+* **Synthetic Verification Benchmark:**
+  For rapid testing of the continuum solvers without running multi-hour GPU simulations, `data/sample_md_params.json` and `sample_gyrate.xvg` provide synthetic, literature-calibrated baseline parameters ($R_g = 9.8\,\text{nm}$, $R_h = 12.65\,\text{nm}$, $D_0 = 2.05 \times 10^{-11}\,\text{m}^2/\text{s}$).
