@@ -99,21 +99,28 @@ class ProcessSimulator:
             r_cake = rc_spec * m_cake
             total_r = membrane_rm + r_cake
 
-            # Clean membrane / unpolarized baseline flux guess
-            j_m_s = tmp_pa / (mu_0 * total_r)
-            c_w = bulk_conc_g_l
-            for _ in range(50):
-                pe = np.clip(j_m_s / km, 0.0, 6.0)
-                c_w = min(c_gel, float(bulk_conc_g_l * np.exp(pe)))
-                phi_rel = np.clip(c_w / (c_gel * 1.2), 0.0, 0.95)
+            j_max = tmp_pa / (mu_0 * total_r)
+
+            def residual(j_val: float) -> float:
+                pe = np.clip(j_val / km, 0.0, 8.0)
+                c_w_est = min(c_gel, float(bulk_conc_g_l * np.exp(pe)))
+                phi_rel = np.clip(c_w_est / (c_gel * 1.2), 0.0, 0.95)
                 mu_w = mu_0 * ((1.0 - phi_rel) ** (-0.0035 * c_gel * 1.2))
-                pi_w = self.virial_osmotic_pressure(c_w)
-                eff_tmp = max(100.0, tmp_pa - pi_w)
-                j_next = eff_tmp / (mu_w * total_r)
-                if abs(j_next - j_m_s) < 1e-9:
-                    j_m_s = j_next
-                    break
-                j_m_s = 0.3 * j_next + 0.7 * j_m_s
+                pi_w = self.virial_osmotic_pressure(c_w_est)
+                eff_tmp = max(10.0, tmp_pa - pi_w)
+                return j_val - eff_tmp / (mu_w * total_r)
+
+            try:
+                import scipy.optimize as opt
+                if residual(0.0) * residual(j_max) <= 0:
+                    j_m_s = float(opt.brentq(residual, 0.0, j_max, xtol=1e-10))
+                else:
+                    j_m_s = j_max * 0.1
+            except Exception:
+                j_m_s = j_max * 0.2
+
+            pe_final = np.clip(j_m_s / km, 0.0, 8.0)
+            c_w = min(c_gel, float(bulk_conc_g_l * np.exp(pe_final)))
 
             j_lmh = j_m_s * 3.6e6
             flux_vec.append(j_lmh)
