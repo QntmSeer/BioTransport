@@ -171,7 +171,7 @@ BioTransport/
 └── scripts/
     ├── master_run_pipeline.py         # Unified 15-Module Master Runner
     ├── generate_multiscale_report.py
-    └── sync_and_run_on_agni.ps1       # HPC Synchronization & Execution
+    └── sync_and_run_on_hpc.ps1       # HPC Synchronization & Execution
 ```
 
 ---
@@ -188,11 +188,11 @@ pip install -e .
 python scripts/master_run_pipeline.py
 ```
 
-### HPC Workstation Deployment (Agni)
+### Remote HPC Deployment
 
 ```powershell
-# Sync and execute remotely on Agni HPC:
-.\scripts\sync_and_run_on_agni.ps1
+# Sync and execute remotely on HPC compute node:
+.\scripts\sync_and_run_on_hpc.ps1
 ```
 
 ---

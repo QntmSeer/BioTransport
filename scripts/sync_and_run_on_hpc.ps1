@@ -1,5 +1,5 @@
 # PowerShell Remote Execution Script for HPC Compute Node
-# Usage: .\scripts\sync_and_run_on_agni.ps1
+# Usage: .\scripts\sync_and_run_on_hpc.ps1
 
 $ErrorActionPreference = "Stop"
 
