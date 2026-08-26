@@ -96,14 +96,13 @@ def main() -> None:
     plot_limiting_flux_curves(sim, data_dir / "limiting_flux_curves.png")
     print(f"       -> Output: data/limiting_flux_curves.png ({time.time() - t0:.2f}s)")
 
-    # Stage 7: High-Intensity Honeycomb Optimization Landscape
-    print("\n[7/10] Coupled Honeycomb Optimization Landscape (70x70 Samples)...")
+    # Stage 7: Rigorous 2D Continuum Process Optimization & Design Space Map
+    print("\n[7/10] Generating 2D Process Optimization Map with SEC Pareto Contours...")
     t0 = time.time()
     run_intense_parameter_sweep(
         params_json=str(params_json),
         output_png=str(data_dir / "intense_optimization_landscape.png"),
-        sample_density=70,
-        hex_grid=24,
+        sample_density=60,
     )
     print(f"       -> Output: data/intense_optimization_landscape.png ({time.time() - t0:.2f}s)")
 

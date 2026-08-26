@@ -51,7 +51,7 @@ This report summarizes the end-to-end multiscale modeling pipeline bridging coar
 * 📊 **4-Panel Filtration Dynamics Dashboard:** `data/filtration_summary_figure.png`
 * 🎬 **Filtration Dynamics Time-Series GIF:** `data/multiscale_filtration_timeseries.gif`
 * 📈 **Parametric Limiting Flux Curves:** `data/limiting_flux_curves.png`
-* 🗺️ **Honeycomb Optimization Landscape:** `data/intense_optimization_landscape.png`
+* 🗺️ **2D Process Optimization Map (Iso-Flux & SEC Contours):** `data/intense_optimization_landscape.png`
 
 ---
 
