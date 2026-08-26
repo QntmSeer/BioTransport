@@ -1,0 +1,21 @@
+; Martini 3 Coarse-Grained Force Field Header
+; Reference: Souza et al., Nature Methods 2021 (DOI: 10.1038/s41592-021-01098-3)
+; Release: Martini 3.0.0
+
+[ defaults ]
+; nbfunc comb-rule gen-pairs fudgeLJ fudgeQQ
+1 1 no 1.0 1.0
+
+[ atomtypes ]
+; name mass charge ptype c6 c12
+W     72.0  0.000  A  0.25920E-02  0.27994E-05
+WN    72.0  0.000  A  0.22000E-02  0.24000E-05
+P1    72.0  0.000  A  0.22464E-02  0.24261E-05
+P2    72.0  0.000  A  0.20000E-02  0.21000E-05
+SP1   54.0  0.000  A  0.18000E-02  0.17000E-05
+SC3   43.0  0.000  A  0.16000E-02  0.15000E-05
+C3    42.0  0.000  A  0.15000E-02  0.14000E-05
+TQ1p  30.0  1.000  A  0.13000E-02  0.12000E-05
+Qa    58.0 -1.000  A  0.19000E-02  0.18000E-05
+NA    72.0  1.000  A  0.20000E-02  0.21000E-05
+CL    72.0 -1.000  A  0.20000E-02  0.21000E-05

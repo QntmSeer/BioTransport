@@ -1,0 +1,23 @@
+; Martini 3 Energy Minimization Parameter File
+integrator               = steep
+emtol                    = 100.0
+emstep                   = 0.01
+nsteps                   = 50000
+
+; Neighbor searching and electrostatics
+cutoff-scheme            = Verlet
+nstlist                  = 20
+ns_type                  = grid
+pbc                      = xyz
+verlet-buffer-tolerance  = 0.005
+
+; Electrostatics
+coulombtype              = reaction-field
+rcoulomb                 = 1.1
+epsilon_r                = 15
+epsilon_rf               = 0
+
+; Van der Waals
+vdw_type                 = cutoff
+vdw-modifier             = Potential-shift-verlet
+rvdw                     = 1.1

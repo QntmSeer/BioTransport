@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biotransport"
+version = "0.1.0"
+description = "Multiscale Bioparticle Transport & Membrane Fouling Modeling Framework"
+readme = "README.md"
+authors = [{ name = "QuantBio Contributor" }]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "jupyter>=1.0.0",
+]
+
+[project.scripts]
+biotransport = "biotransport.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["02_continuum_transport/python"]

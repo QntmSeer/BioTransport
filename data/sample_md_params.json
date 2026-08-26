@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "source": "Martini 3 Coarse-Grained Molecular Dynamics",
+    "model": "ELP_(VPGVG)40_50chains",
+    "solvent": "Water + 150mM NaCl"
+  },
+  "thermodynamics": {
+    "temperature_K": 315.15,
+    "molecular_weight_g_mol": 45000.0,
+    "transition_temperature_Tt_K": 308.15
+  },
+  "microscale_properties": {
+    "radius_of_gyration_Rg_nm": 9.8,
+    "hydrodynamic_radius_Rh_nm": 12.652,
+    "particle_density_kg_m3": 1050.0,
+    "diffusion_coefficient_D0_m2_s": 2.05e-11,
+    "osmotic_virial_B2_m3_mol": 5.1085,
+    "compressibility_exponent_n": 0.45,
+    "gel_concentration_g_L": 420.0
+  }
+}

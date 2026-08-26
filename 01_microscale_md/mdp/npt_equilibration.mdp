@@ -1,0 +1,41 @@
+; Martini 3 NPT Equilibration Parameter File (300K, 1 bar)
+integrator               = md
+dt                       = 0.020      ; 20 fs time step
+nsteps                   = 500000     ; 10 ns equilibration
+
+; Output control
+nstxout-compressed       = 5000       ; every 100 ps
+nstlog                   = 5000
+nstenergy                = 5000
+
+; Nonbonded interactions
+cutoff-scheme            = Verlet
+nstlist                  = 20
+ns_type                  = grid
+pbc                      = xyz
+verlet-buffer-tolerance  = 0.005
+coulombtype              = reaction-field
+rcoulomb                 = 1.1
+epsilon_r                = 15
+epsilon_rf               = 0
+vdw_type                 = cutoff
+vdw-modifier             = Potential-shift-verlet
+rvdw                     = 1.1
+
+; Temperature coupling (v-rescale)
+tcoupl                   = v-rescale
+tc-grps                  = System
+tau_t                    = 1.0
+ref_t                    = 300.0
+
+; Pressure coupling (Parrinello-Rahman isotropic)
+Pcoupl                   = Parrinello-Rahman
+Pcoupltype               = isotropic
+tau_p                    = 12.0
+compressibility          = 3.0e-4
+ref_p                    = 1.0
+
+; Velocity generation
+gen_vel                  = yes
+gen_temp                 = 300.0
+gen_seed                 = 42

@@ -1,0 +1,37 @@
+; Martini 3 Non-Equilibrium MD Shear Flow Protocol (Couette Shear)
+integrator               = md
+dt                       = 0.020
+nsteps                   = 5000000    ; 100 ns under continuous shear
+
+; Output control
+nstxout-compressed       = 5000
+nstlog                   = 5000
+nstenergy                = 5000
+
+; Nonbonded interactions
+cutoff-scheme            = Verlet
+nstlist                  = 20
+ns_type                  = grid
+pbc                      = xyz
+verlet-buffer-tolerance  = 0.005
+coulombtype              = reaction-field
+rcoulomb                 = 1.1
+epsilon_r                = 15
+epsilon_rf               = 0
+vdw_type                 = cutoff
+vdw-modifier             = Potential-shift-verlet
+rvdw                     = 1.1
+
+; Temperature coupling (v-rescale removes shear heating artifact)
+tcoupl                   = v-rescale
+tc-grps                  = System
+tau_t                    = 0.5
+ref_t                    = 325.0
+
+; Shear deformation: deform vx vy vz vxy vyz vzx (nm/ps)
+; Equivalent to a shear rate gamma_dot = 1.0e7 s^-1
+deform                   = 0 0 0 0.0001 0 0
+
+Pcoupl                   = no
+gen_vel                  = no
+continuation             = yes

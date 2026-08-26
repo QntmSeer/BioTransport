@@ -1,0 +1,25 @@
+[package]
+name = "biotransport-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["QuantBio Multiscale Bioparticle Transport Contributors"]
+description = "High-performance continuum transport & membrane fouling numerical engine for bioparticles"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+thiserror = "1.0"
+
+[dev-dependencies]
+approx = "0.5"
+
+[[bin]]
+name = "biotransport-cli"
+path = "src/main.rs"
+
+[lib]
+name = "biotransport"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]

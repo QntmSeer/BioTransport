@@ -1,0 +1,39 @@
+; Martini 3 Thermal Quench & Coacervation Production (325K > Tt)
+integrator               = md
+dt                       = 0.020      ; 20 fs time step
+nsteps                   = 25000000   ; 500 ns CG time (equivalent to ~2 us effective time)
+
+; Output control
+nstxout-compressed       = 10000      ; every 200 ps
+nstlog                   = 10000
+nstenergy                = 10000
+
+; Nonbonded interactions
+cutoff-scheme            = Verlet
+nstlist                  = 20
+ns_type                  = grid
+pbc                      = xyz
+verlet-buffer-tolerance  = 0.005
+coulombtype              = reaction-field
+rcoulomb                 = 1.1
+epsilon_r                = 15
+epsilon_rf               = 0
+vdw_type                 = cutoff
+vdw-modifier             = Potential-shift-verlet
+rvdw                     = 1.1
+
+; Temperature coupling (325K to drive hydrophobic phase separation)
+tcoupl                   = v-rescale
+tc-grps                  = System
+tau_t                    = 1.0
+ref_t                    = 325.0
+
+; Pressure coupling
+Pcoupl                   = Parrinello-Rahman
+Pcoupltype               = isotropic
+tau_p                    = 12.0
+compressibility          = 3.0e-4
+ref_p                    = 1.0
+
+gen_vel                  = no
+continuation             = yes
