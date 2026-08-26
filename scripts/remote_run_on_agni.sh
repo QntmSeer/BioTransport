@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Script to synchronize the codebase and dispatch high-performance GROMACS/Rust compute on workstation (agni@omarchy).
+# Script to synchronize the codebase and dispatch high-performance GROMACS/Rust compute on HPC workstation.
 
 set -e
 
-REMOTE_HOST="192.168.1.112"
-REMOTE_USER="agni"
-REMOTE_DIR="~/multiscale-bioparticle-transport"
+REMOTE_HOST="${HPC_HOST:-hpc-workstation}"
+REMOTE_USER="${HPC_USER:-user}"
+REMOTE_DIR="${HPC_DIR:-~/multiscale-bioparticle-transport}"
 
 echo "================================================================="
-echo "  Dispatching Multiscale Bioparticle Transport Compute to Agni  "
+echo "  Dispatching Multiscale Bioparticle Transport Compute to HPC    "
 echo "  Target: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}            "
 echo "================================================================="
 
@@ -35,7 +35,7 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
 '"
 
 # 3. Execute sample continuum parameter simulation
-echo "[3/3] Running high-speed simulation on Agni..."
+echo "[3/3] Running high-speed simulation on HPC..."
 ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
     export PATH=\"\$HOME/.cargo/bin:\$PATH\"
     [ -f \"\$HOME/.cargo/env\" ] && source \"\$HOME/.cargo/env\"
@@ -44,9 +44,9 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} "bash -l -c '
         --params data/sample_md_params.json \
         --tmp 200000 \
         --time 3600 \
-        --out data/remote_simulation_results.json
+        --out data/hpc_benchmark_output.json
 '"
 
 echo "================================================================="
-echo "  Compute successfully completed on agni!                        "
+echo "  HPC execution completed successfully!                          "
 echo "================================================================="

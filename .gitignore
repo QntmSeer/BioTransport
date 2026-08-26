@@ -1,4 +1,4 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,8 +8,15 @@ build/
 .pytest_cache/
 .coverage
 
-# Rust
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Rust Build Artifacts
 02_continuum_transport/biotransport-rs/target/
+target/
 Cargo.lock
 
 # GROMACS Trajectories & Large Binaries (Never commit raw MD trajectories)
@@ -23,8 +30,28 @@ Cargo.lock
 .#*
 step*.pdb
 
-# IDE & OS
+# Secrets, Credentials, Tokens, Environment files
+.env
+.env.*
+*.env
+*secret*
+*credential*
+*token*
+*.pem
+*.key
+id_rsa*
+*.pub
+
+# Local User Configurations
+*.local
+*.local.*
+hpc_config.json
+local_config.*
+
+# IDE, OS & System Metadata
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*~

@@ -1,7 +1,7 @@
 # Multiscale Bioparticle Transport & Purification Engineering Report
 **Project:** Multiscale Modeling of Temperature-Responsive Elastin-Like Polypeptides (ELPs)  
 **Pipeline:** Microscale Martini 3 CG-MD $\longrightarrow$ Continuum Tangential Flow Filtration (TFF)  
-**Compute Workstation:** Agni (`agni@192.168.1.112`)
+**Compute Architecture:** High-Performance Linux HPC Cluster / Multi-Core Workstation
 
 ---
 
