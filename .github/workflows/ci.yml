@@ -16,17 +16,6 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            02_continuum_transport/biotransport-rs/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-
       - name: Build Rust crate
         run: |
           cd 02_continuum_transport/biotransport-rs
@@ -38,7 +27,7 @@ jobs:
           cargo test --verbose
 
   test-python:
-    name: Python Continuum Bridge Tests
+    name: Python Continuum Bridge & Multiscale Suite
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -59,8 +48,15 @@ jobs:
 
       - name: Run Python test suite
         run: |
-          pytest 01_microscale_md/tests 02_continuum_transport/python/tests -v --cov=biotransport
+          export PYTHONPATH="02_continuum_transport/python:01_microscale_md/scripts:$PYTHONPATH"
+          pytest 01_microscale_md/tests 02_continuum_transport/python/tests -v
 
       - name: Test CLI execution and figure generation
         run: |
+          export PYTHONPATH="02_continuum_transport/python:$PYTHONPATH"
           python 02_continuum_transport/python/biotransport/cli.py --params data/sample_md_params.json --plot data/ci_test_plot.png
+
+      - name: Test Master 15-Module Pipeline Execution
+        run: |
+          export PYTHONPATH="02_continuum_transport/python:01_microscale_md/scripts:$PYTHONPATH"
+          python scripts/master_run_pipeline.py
