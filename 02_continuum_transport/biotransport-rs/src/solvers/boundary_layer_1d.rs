@@ -26,21 +26,26 @@ pub fn solve_boundary_layer_profile(
     diffusivity_d0_m2_s: f64,
     n_points: usize,
 ) -> BoundaryLayerProfile {
-    let delta = diffusivity_d0_m2_s / mass_transfer_coeff_k_m_s.max(1e-9);
-    let pe = (permeate_flux_m_s / mass_transfer_coeff_k_m_s.max(1e-9)).clamp(0.0, 10.0);
+    let km = mass_transfer_coeff_k_m_s.max(1e-9);
+    let d0 = diffusivity_d0_m2_s.max(1e-14);
+    let delta = d0 / km;
+    let pe = (permeate_flux_m_s / km).max(0.0).min(10.0);
     let c_w = bulk_conc_g_l * pe.exp();
 
-    let mut y_grid = Vec::with_capacity(n_points);
-    let mut c_profile = Vec::with_capacity(n_points);
+    let n = n_points.max(2);
+    let mut y_grid = Vec::with_capacity(n);
+    let mut c_profile = Vec::with_capacity(n);
 
-    for i in 0..n_points {
-        let frac = i as f64 / (n_points - 1) as f64;
+    for i in 0..n {
+        let frac = i as f64 / (n - 1) as f64;
         let y = frac * delta;
         // Concentration decreases exponentially from wall (y=0) to bulk (y=delta)
-        let c_y = bulk_conc_g_l * ((permeate_flux_m_s / diffusivity_d0_m2_s) * (delta - y)).exp();
-        let c_clamped = c_y.clamp(bulk_conc_g_l, c_w);
+        let c_y = bulk_conc_g_l * ((permeate_flux_m_s / d0) * (delta - y)).exp();
+        let max_val = c_w.max(bulk_conc_g_l);
+        let min_val = bulk_conc_g_l.min(c_w);
+        let c_safe = c_y.max(min_val).min(max_val);
         y_grid.push(y);
-        c_profile.push(c_clamped);
+        c_profile.push(c_safe);
     }
 
     BoundaryLayerProfile {

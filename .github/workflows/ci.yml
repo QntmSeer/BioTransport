@@ -24,7 +24,7 @@ jobs:
       - name: Run Rust unit and integration tests
         run: |
           cd 02_continuum_transport/biotransport-rs
-          cargo test --verbose
+          cargo test --verbose -- --nocapture
 
   test-python:
     name: Python Continuum Bridge & Multiscale Suite

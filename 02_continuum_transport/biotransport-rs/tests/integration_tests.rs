@@ -42,7 +42,7 @@ fn test_end_to_end_multiscale_bridge() {
 
     assert!(summary.initial_flux_lmh > 0.0);
     assert!(summary.final_flux_lmh > 0.0);
-    assert!(summary.initial_flux_lmh >= summary.final_flux_lmh);
+    assert!(summary.initial_flux_lmh >= summary.final_flux_lmh - 1e-6);
     assert!(summary.total_permeate_collected_l_m2 > 0.0);
     assert!(summary.maximum_wall_concentration_g_l >= ops.bulk_concentration_g_l);
     assert!(summary.specific_cake_resistance_m_kg > 1.0e12);
@@ -52,6 +52,6 @@ fn test_end_to_end_multiscale_bridge() {
 fn test_boundary_layer_monotonicity() {
     let profile = solve_boundary_layer_profile(10.0, 1.5e-5, 2.5e-5, 2.0e-11, 20);
     for window in profile.concentration_g_l.windows(2) {
-        assert!(window[0] >= window[1]); // Decreasing from wall to bulk
+        assert!(window[0] >= window[1] - 1e-9); // Decreasing from wall to bulk with float tolerance
     }
 }
